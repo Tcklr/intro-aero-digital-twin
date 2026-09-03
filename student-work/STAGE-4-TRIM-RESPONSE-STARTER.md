@@ -131,8 +131,8 @@ Disturbance response:
 delta_Cm = 0.8(2*3.14/180)
 
 Expected classifications:
-selected condition = [trimmed / not trimmed]
-disturbance tendency = [restoring / neutral / destabilizing]
+selected condition = not trimmed
+disturbance tendency = destabilizing
 ```
 
 ## 9. Verification Cases — STUDENT COMPLETES
@@ -153,11 +153,11 @@ delta_alpha = +2.00 deg
 
 Expected results:
 
-Cm(alpha) = 0.00006687 dimensionless
+Cm(alpha) = 0.00006687
 
 alpha_trim = -2.86479 deg
 
-delta_Cm = 0.0279253 dimensionless
+delta_Cm = 0.0279253
 
 Selected condition = not trimmed
 
@@ -171,21 +171,11 @@ The numerical outputs should agree with these reference values within a toleranc
 Change one input and state the exact trend or sign that must result.
 
 ```text
-Change only:
-
-disturbanceAlphaDeg = +4.00 deg
-
-while keeping:
-
-Cm0 = 0.04
-Cm_alpha = 0.8 1/rad
-alpha = -2.86 deg
+delta alpha = +4.00 deg
 
 Expected behavior:
 
-Doubling the disturbance from +2.00 deg to +4.00 deg should double delta_Cm from approximately 0.0279253 to approximately 0.0558505.
-
-The value of delta_Cm should remain positive, so the disturbance tendency should remain destabilizing.
+Doubling the disturbance from +2.00 deg to +4.00 deg should double delta_Cm.
 ```
 
 ### 9.3 Boundary or sanity case
@@ -243,7 +233,7 @@ Do not modify any existing file.
 In one or two sentences, state what decision the completed feature will support and what it cannot establish.
 
 ```text
-The completed feature will support deciding whether the selected operating condition is trimmed and whether a small angle-of-attack disturbance produces a restoring, neutral, or destabilizing pitching-moment tendency. It cannot establish dynamic stability, handling quality, controllability, safety, or flightworthiness.
+The completed feature will decide whether the selected operating condition is trimmed and whether a small angle-of-attack disturbance produces a restoring, neutral, or destabilizing pitching-moment tendency. It cannot establish dynamic stability, handling quality, controllability, safety, or flightworthiness.
 ```
 
 ---
