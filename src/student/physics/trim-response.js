@@ -1,18 +1,28 @@
-// Linear quasi-static Cm–alpha model.
-// Angles supplied in degrees are converted to radians before applying
-// cmAlphaPerRad [1/rad]. Positive angle and pitching moment are nose-up.
-// This model does not represent dynamic stability or time response.
+// Linear quasi-static Cm-alpha model.
+// Angles supplied in degrees are converted to radians before using Cm_alpha.
+// Positive angle of attack and positive pitching moment are nose-up.
+// This model does not predict time response, damping, handling quality, or safety.
 
-export const TRIM_TOLERANCE = 1e-6;
+const DEG_TO_RAD = Math.PI / 180;
+const RAD_TO_DEG = 180 / Math.PI;
+const TRIM_TOLERANCE = 1e-6;
+
+function requireFiniteNumber(value, name) {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    throw new TypeError(`${name} must be a finite number.`);
+  }
+
+  return value;
+}
 
 export function degreesToRadians(angleDeg) {
-  assertFiniteNumber(angleDeg, "angleDeg");
-  return (angleDeg * Math.PI) / 180;
+  requireFiniteNumber(angleDeg, "angleDeg");
+  return angleDeg * DEG_TO_RAD;
 }
 
 export function radiansToDegrees(angleRad) {
-  assertFiniteNumber(angleRad, "angleRad");
-  return (angleRad * 180) / Math.PI;
+  requireFiniteNumber(angleRad, "angleRad");
+  return angleRad * RAD_TO_DEG;
 }
 
 export function pitchingMomentCoefficient(
@@ -20,112 +30,104 @@ export function pitchingMomentCoefficient(
   cmAlphaPerRad,
   angleOfAttackDeg
 ) {
-  assertFiniteNumber(cm0, "cm0");
-  assertFiniteNumber(cmAlphaPerRad, "cmAlphaPerRad");
-  assertFiniteNumber(angleOfAttackDeg, "angleOfAttackDeg");
+  requireFiniteNumber(cm0, "cm0");
+  requireFiniteNumber(cmAlphaPerRad, "cmAlphaPerRad");
+  requireFiniteNumber(angleOfAttackDeg, "angleOfAttackDeg");
 
   const alphaRad = degreesToRadians(angleOfAttackDeg);
+
   return cm0 + cmAlphaPerRad * alphaRad;
 }
 
 export function trimAngleDeg(cm0, cmAlphaPerRad) {
-  assertFiniteNumber(cm0, "cm0");
-  assertFiniteNumber(cmAlphaPerRad, "cmAlphaPerRad");
+  requireFiniteNumber(cm0, "cm0");
+  requireFiniteNumber(cmAlphaPerRad, "cmAlphaPerRad");
 
   if (cmAlphaPerRad === 0) {
     return null;
   }
 
   const trimAngleRad = -cm0 / cmAlphaPerRad;
+
   return radiansToDegrees(trimAngleRad);
 }
 
-export function disturbanceMomentChange(
+export function disturbanceMomentCoefficientChange(
   cmAlphaPerRad,
   disturbanceAlphaDeg
 ) {
-  assertFiniteNumber(cmAlphaPerRad, "cmAlphaPerRad");
-  assertFiniteNumber(disturbanceAlphaDeg, "disturbanceAlphaDeg");
+  requireFiniteNumber(cmAlphaPerRad, "cmAlphaPerRad");
+  requireFiniteNumber(disturbanceAlphaDeg, "disturbanceAlphaDeg");
 
   const disturbanceAlphaRad = degreesToRadians(disturbanceAlphaDeg);
+
   return cmAlphaPerRad * disturbanceAlphaRad;
 }
 
-export function isTrimmed(cmValue, tolerance = TRIM_TOLERANCE) {
-  assertFiniteNumber(cmValue, "cmValue");
-  assertFiniteNumber(tolerance, "tolerance");
+export function isTrimmed(cmAlphaValue, tolerance = TRIM_TOLERANCE) {
+  requireFiniteNumber(cmAlphaValue, "cmAlphaValue");
+  requireFiniteNumber(tolerance, "tolerance");
 
   if (tolerance < 0) {
-    throw new RangeError("tolerance must be non-negative");
+    throw new RangeError("tolerance must be non-negative.");
   }
 
-  return Math.abs(cmValue) <= tolerance;
+  return Math.abs(cmAlphaValue) <= tolerance;
 }
 
 export function classifyDisturbance(
-  cmAlphaPerRad,
-  disturbanceAlphaDeg
+  disturbanceAlphaDeg,
+  deltaCm
 ) {
-  assertFiniteNumber(cmAlphaPerRad, "cmAlphaPerRad");
-  assertFiniteNumber(disturbanceAlphaDeg, "disturbanceAlphaDeg");
+  requireFiniteNumber(disturbanceAlphaDeg, "disturbanceAlphaDeg");
+  requireFiniteNumber(deltaCm, "deltaCm");
 
   const disturbanceAlphaRad = degreesToRadians(disturbanceAlphaDeg);
-  const deltaCm = disturbanceMomentChange(
-    cmAlphaPerRad,
-    disturbanceAlphaDeg
-  );
+  const classificationProduct = disturbanceAlphaRad * deltaCm;
 
-  const classificationValue = disturbanceAlphaRad * deltaCm;
-
-  if (classificationValue < 0) {
+  if (classificationProduct < 0) {
     return "restoring";
   }
 
-  if (classificationValue > 0) {
+  if (classificationProduct > 0) {
     return "destabilizing";
   }
 
   return "neutral";
 }
 
-export function calculateTrimResponse({
+export function analyzeTrimResponse({
   cm0,
   cmAlphaPerRad,
   angleOfAttackDeg,
   disturbanceAlphaDeg
 }) {
-  assertFiniteNumber(cm0, "cm0");
-  assertFiniteNumber(cmAlphaPerRad, "cmAlphaPerRad");
-  assertFiniteNumber(angleOfAttackDeg, "angleOfAttackDeg");
-  assertFiniteNumber(disturbanceAlphaDeg, "disturbanceAlphaDeg");
+  requireFiniteNumber(cm0, "cm0");
+  requireFiniteNumber(cmAlphaPerRad, "cmAlphaPerRad");
+  requireFiniteNumber(angleOfAttackDeg, "angleOfAttackDeg");
+  requireFiniteNumber(disturbanceAlphaDeg, "disturbanceAlphaDeg");
 
-  const cm = pitchingMomentCoefficient(
+  const cmAtAlpha = pitchingMomentCoefficient(
     cm0,
     cmAlphaPerRad,
     angleOfAttackDeg
   );
 
-  const trimDeg = trimAngleDeg(cm0, cmAlphaPerRad);
+  const alphaTrimDeg = trimAngleDeg(cm0, cmAlphaPerRad);
 
-  const deltaCm = disturbanceMomentChange(
+  const deltaCm = disturbanceMomentCoefficientChange(
     cmAlphaPerRad,
     disturbanceAlphaDeg
   );
 
   return {
-    cm,
-    trimAngleDeg: trimDeg,
+    cmAtAlpha,
+    alphaTrimDeg,
     deltaCm,
-    trimmed: isTrimmed(cm),
+    trimmed: isTrimmed(cmAtAlpha),
     disturbanceTendency: classifyDisturbance(
-      cmAlphaPerRad,
-      disturbanceAlphaDeg
+      disturbanceAlphaDeg,
+      deltaCm
     )
   };
-}
-
-function assertFiniteNumber(value, name) {
-  if (typeof value !== "number" || !Number.isFinite(value)) {
-    throw new TypeError(`${name} must be a finite number`);
-  }
 }

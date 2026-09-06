@@ -1,82 +1,81 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  calculateTrimResponse,
-  pitchingMomentCoefficient
+  analyzeTrimResponse,
+  disturbanceMomentCoefficientChange,
+  pitchingMomentCoefficient,
+  trimAngleDeg
 } from "../../src/student/physics/trim-response.js";
 
 describe("trim-response physics", () => {
-  it("matches the completed numerical reference case", () => {
-    const result = calculateTrimResponse({
+  it("matches the approved numerical reference case", () => {
+    const result = analyzeTrimResponse({
       cm0: 0.04,
-      cmAlphaPerRad: 0.8,
+      cmAlphaPerRad: -0.8,
       angleOfAttackDeg: -2.86,
       disturbanceAlphaDeg: 2
     });
 
-    const tolerance = 1e-6;
+    expect(result.cmAtAlpha).toBeCloseTo(
+      0.07993313,
+      6
+    );
 
-    expect(
-      Math.abs(result.cm - 0.00006687)
-    ).toBeLessThanOrEqual(tolerance);
+    expect(result.alphaTrimDeg).toBeCloseTo(
+      2.86478898,
+      6
+    );
 
-    expect(
-      Math.abs(result.trimAngleDeg - -2.86479)
-    ).toBeLessThanOrEqual(tolerance);
-
-    expect(
-      Math.abs(result.deltaCm - 0.0279253)
-    ).toBeLessThanOrEqual(tolerance);
+    expect(result.deltaCm).toBeCloseTo(
+      -0.02792527,
+      6
+    );
 
     expect(result.trimmed).toBe(false);
-    expect(result.disturbanceTendency).toBe(
-      "destabilizing"
-    );
+    expect(result.disturbanceTendency).toBe("restoring");
   });
 
-  it("doubles delta_Cm when the disturbance angle is doubled", () => {
-    const baseline = calculateTrimResponse({
-      cm0: 0.04,
-      cmAlphaPerRad: 0.8,
-      angleOfAttackDeg: -2.86,
-      disturbanceAlphaDeg: 2
-    });
+  it("doubles delta_Cm when the disturbance angle doubles", () => {
+    const baselineDeltaCm =
+      disturbanceMomentCoefficientChange(-0.8, 2);
 
-    const doubledDisturbance = calculateTrimResponse({
-      cm0: 0.04,
-      cmAlphaPerRad: 0.8,
-      angleOfAttackDeg: -2.86,
-      disturbanceAlphaDeg: 4
-    });
+    const doubledDeltaCm =
+      disturbanceMomentCoefficientChange(-0.8, 4);
 
-    const tolerance = 1e-6;
-
-    expect(
-      Math.abs(
-        doubledDisturbance.deltaCm -
-          2 * baseline.deltaCm
-      )
-    ).toBeLessThanOrEqual(tolerance);
+    expect(doubledDeltaCm).toBeCloseTo(
+      2 * baselineDeltaCm,
+      12
+    );
   });
 
   it("handles zero Cm-alpha slope without division by zero", () => {
-    const result = calculateTrimResponse({
+    const result = analyzeTrimResponse({
       cm0: 0.04,
       cmAlphaPerRad: 0,
-      angleOfAttackDeg: -2.86,
+      angleOfAttackDeg: 5,
       disturbanceAlphaDeg: 2
     });
 
+    const cmAtNegativeAngle =
+      pitchingMomentCoefficient(0.04, 0, -5);
+
+    const cmAtPositiveAngle =
+      pitchingMomentCoefficient(0.04, 0, 5);
+
     expect(result.deltaCm).toBe(0);
     expect(result.disturbanceTendency).toBe("neutral");
-    expect(result.trimAngleDeg).toBeNull();
+    expect(result.alphaTrimDeg).toBeNull();
 
-    const cmAtAnotherAngle = pitchingMomentCoefficient(
-      0.04,
-      0,
-      5
+    expect(trimAngleDeg(0.04, 0)).toBeNull();
+
+    expect(cmAtNegativeAngle).toBeCloseTo(
+      cmAtPositiveAngle,
+      12
     );
 
-    expect(cmAtAnotherAngle).toBe(result.cm);
+    expect(cmAtPositiveAngle).toBeCloseTo(
+      0.04,
+      12
+    );
   });
 });
