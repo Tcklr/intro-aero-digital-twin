@@ -112,23 +112,23 @@ Use the assigned class values or values approved by your instructor. Show the su
 ```text
 Inputs:
 Cm0 = 0.04
-Cm_alpha = 0.8 1/rad
+Cm_alpha = -80.8 1/rad
 alpha = -2.86 deg
 delta_alpha = +2.00 deg
 
 Angle conversion:
-alpha_rad = 2.86*3.14/180
-delta_alpha_rad = 2*3.14/180
+alpha_rad = 2.86*pi/180 = 0.04992
+delta_alpha_rad = 2*pi/180 = 0.03491
 
 Current pitching-moment coefficient:
-Cm(alpha) = 0.8*3.14/180
+Cm(alpha) = 0.8*pi/180 = 0.01396
 
 Trim angle:
-alpha_trim_rad = 2.86*3.14/180
+alpha_trim_rad = 2.86*pi/180 = 0.04992
 alpha_trim_deg = 2.86
 
 Disturbance response:
-delta_Cm = 0.8(2*3.14/180)
+delta_Cm = 0.8(2*pi/180) = 0.02793
 
 Expected classifications:
 selected condition = not trimmed
@@ -147,7 +147,7 @@ Use your Section 8 reference calculation.
 Inputs:
 
 Cm0 = 0.04
-Cm_alpha = 0.8 1/rad
+Cm_alpha = -0.8 1/rad
 alpha = -2.86 deg
 delta_alpha = +2.00 deg
 
